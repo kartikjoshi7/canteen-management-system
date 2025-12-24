@@ -1,0 +1,26 @@
+{
+    "1": {
+        "name": "Veg Burger",
+        "price": "45",
+        "description": "Crispy veg patty with fresh lettuce and cheese.",
+        "image": "burger.png"
+    },
+    "2": {
+        "name": "Masala Dosa",
+        "price": "60",
+        "description": "South Indian classic served with chutney and sambar.",
+        "image": "dosa.png"
+    },
+    "3": {
+        "name": "Cheese Sandwich",
+        "price": "35",
+        "description": "Grilled sandwich loaded with mozzarella cheese.",
+        "image": "sandwich.png"
+    },
+    "4": {
+        "name": "Cold Coffee",
+        "price": "30",
+        "description": "Chilled coffee with a scoop of vanilla ice cream.",
+        "image": "coffee.png"
+    }
+}

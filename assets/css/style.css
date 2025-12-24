@@ -1,0 +1,279 @@
+/* IMPORT GOOGLE FONT (Poppins - Clean & Modern) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+/* --- CSS VARIABLES (Easy to change colors) --- */
+:root {
+    --primary-color: #ff6600;      /* Vibrant Orange */
+    --primary-hover: #e65c00;      /* Darker Orange */
+    --secondary-color: #2d3436;    /* Dark Grey (Header) */
+    --bg-color: #f8f9fa;           /* Light Grey Background */
+    --card-bg: #ffffff;            /* White */
+    --text-color: #333333;
+    --light-text: #666666;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --shadow-sm: 0 2px 5px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* --- RESET & BASICS --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif; /* Applied Modern Font */
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* --- NAVIGATION BAR --- */
+header {
+    background: var(--secondary-color);
+    color: #fff;
+    padding: 1rem 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    position: sticky; /* Sticks to top when scrolling */
+    top: 0;
+    z-index: 1000;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    max-width: 1200px; /* Prevents it from getting too wide on huge screens */
+    margin: auto;
+}
+
+nav h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 25px; /* Modern spacing instead of margin-left */
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+}
+
+nav ul li a:hover {
+    color: var(--primary-color);
+}
+
+/* --- CONTAINER --- */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 2rem auto;
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 12px; /* Smoother corners */
+    box-shadow: var(--shadow-md); /* Soft shadow */
+    min-height: 60vh;
+    animation: fadeIn 0.5s ease-in-out; /* Fade in animation */
+}
+
+/* --- BUTTONS (Modern & Tactile) --- */
+.btn {
+    display: inline-block;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 30px; /* Pill shape */
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(255, 102, 0, 0.2);
+}
+
+.btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px); /* Slight lift effect */
+    box-shadow: 0 6px 12px rgba(255, 102, 0, 0.3);
+}
+
+/* --- FOOD MENU CARDS (Grid Layout) --- */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 30px;
+    padding: 10px;
+}
+
+.food-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #eee;
+}
+
+.food-card:hover {
+    transform: translateY(-5px); /* Lift up card on hover */
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+}
+
+.food-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.food-card:hover img {
+    transform: scale(1.05); /* Slight zoom on image */
+}
+
+.food-card h3 {
+    margin: 15px 0 5px;
+    font-size: 1.2rem;
+    color: var(--text-color);
+}
+
+.food-card p {
+    color: var(--light-text);
+    font-size: 0.9rem;
+    padding: 0 15px;
+}
+
+.food-card h4 {
+    font-size: 1.3rem;
+    margin: 10px 0;
+    color: var(--primary-color);
+}
+
+.food-card .btn {
+    width: 90%;
+    margin-bottom: 20px;
+    border-radius: 8px; /* Slightly squarer buttons for cards */
+}
+
+/* --- TABLES (Cart & Admin) --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden; /* Clips corners for header */
+    box-shadow: var(--shadow-sm);
+}
+
+th {
+    background: var(--secondary-color);
+    color: #fff;
+    padding: 15px;
+    text-align: left;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    color: var(--text-color);
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover {
+    background-color: #f9f9f9; /* Row highlight on hover */
+}
+
+/* --- FORMS (Login & Inputs) --- */
+.login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 40px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+input[type="text"], 
+input[type="password"], 
+input[type="number"],
+textarea,
+select,
+input[type="file"] {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 8px 0 20px 0;
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fdfdfd;
+    transition: border-color 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+}
+
+/* --- DASHBOARD STAT CARDS --- */
+.stat-card {
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    border-bottom: 4px solid var(--primary-color);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+/* --- FOOTER --- */
+footer {
+    background: var(--secondary-color);
+    color: #aaa;
+    text-align: center;
+    padding: 2rem 1rem;
+    margin-top: auto; /* Pushes footer to bottom */
+    font-size: 0.9rem;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 768px) {
+    nav { flex-direction: column; gap: 15px; }
+    .container { padding: 1.5rem; width: 95%; }
+    .dashboard-grid { grid-template-columns: 1fr !important; }
+}
