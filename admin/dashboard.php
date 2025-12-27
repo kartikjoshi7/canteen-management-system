@@ -1,7 +1,10 @@
 <?php
 session_start();
 
-// 1. SECURITY CHECK
+// 1. SECURITY CHECK (Gatekeeper)
+// Que: "Why do we have this block at the top?"
+// Ans: "To prevent unauthorized access. If a student tries to guess this URL, 
+// the code checks their session. If they are not 'admin', they get kicked out immediately."
 if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
     header("Location: ../login.php");
     exit();
@@ -9,40 +12,48 @@ if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
 
 $file_path = '../data/orders.json';
 
-// 2. HANDLE STATUS UPDATE (When Admin clicks "Update")
+// 2. HANDLE STATUS UPDATE (When Admin clicks "Update" button)
 if (isset($_POST['update_status'])) {
+    
     $order_id = $_POST['order_id'];
     $new_status = $_POST['new_status'];
 
     if (file_exists($file_path)) {
+        // Read current data
         $json_data = file_get_contents($file_path);
         $orders = json_decode($json_data, true);
 
-        // Find the specific order and update it
-        // We use &$order to modify the original array directly
+        // FIND AND UPDATE LOGIC:
+        // Que: "Why did you use the '&' symbol in &$order?"
+        // Ans: "That is 'Pass by Reference'. It allows me to modify the ACTUAL order inside the array. 
+        // Without the '&', PHP would only modify a temporary copy, and the change wouldn't be saved."
         foreach ($orders as &$order) {
             if ($order['id'] == $order_id) {
-                $order['status'] = $new_status;
-                break; // Stop looking once found
+                $order['status'] = $new_status; // Change the status
+                break; // Stop looking once we found the right order (Efficiency)
             }
         }
         
-        // Save back to JSON file
+        // SAVE CHANGES
+        // Write the updated array back to the JSON file.
         file_put_contents($file_path, json_encode($orders, JSON_PRETTY_PRINT));
         
-        // Refresh page to see changes
+        // REDIRECT (PRG Pattern)
+        // We refresh the page so the Admin sees the new status immediately.
         header("Location: dashboard.php");
         exit();
     }
 }
 
-// 3. READ ORDERS
+// 3. READ ORDERS FOR STATISTICS
 $orders = [];
 if (file_exists($file_path)) {
     $json_data = file_get_contents($file_path);
     $orders = json_decode($json_data, true);
+    
+    // Reverse array to show newest orders at the top
     if (!empty($orders)) {
-        $orders = array_reverse($orders); // Show newest first
+        $orders = array_reverse($orders); 
     }
 }
 ?>
@@ -52,7 +63,7 @@ if (file_exists($file_path)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | GTU Canteen</title>
+    <title>Admin Dashboard | SVIT Canteen</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
         .dashboard-grid { display: grid; grid-template-columns: 1fr 3fr; gap: 20px; }
@@ -75,7 +86,7 @@ if (file_exists($file_path)) {
 
 <header>
     <nav>
-        <h1>GTU Admin Panel</h1>
+        <h1>SVIT Admin Panel</h1>
         <ul>
             <li><a href="#" style="color: #ff9900;">Hello, Admin</a></li>
             <li><a href="../logout.php">Logout</a></li>
@@ -98,26 +109,29 @@ if (file_exists($file_path)) {
         <div class="main-content">
             
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+                
                 <div class="stat-card">
                     <h3>Total Orders</h3>
                     <p style="font-size: 2rem; color: #28a745;"><?php echo count($orders); ?></p>
                 </div>
+
                 <div class="stat-card">
                     <h3>Pending</h3>
                     <p style="font-size: 2rem; color: #ff9900;">
                         <?php 
-                        // Count how many are 'Pending'
+                        // Logic: Loop through orders and count only those where status is 'Pending'
                         $pending_count = 0;
                         foreach($orders as $o) { if($o['status'] == 'Pending') $pending_count++; }
                         echo $pending_count;
                         ?>
                     </p>
                 </div>
+
                 <div class="stat-card">
                     <h3>Revenue</h3>
                     <p style="font-size: 2rem; color: #007bff;">
                         <?php 
-                        // Sum up the total money
+                        // Logic: Loop through all orders and sum up the 'total' price
                         $revenue = 0;
                         foreach($orders as $o) { $revenue += $o['total']; }
                         echo "₹" . $revenue;

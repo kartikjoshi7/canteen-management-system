@@ -1,23 +1,35 @@
 <?php
 include 'includes/header.php';
+// We include mock_data.php because it acts as our "Database". 
+// It contains the list of valid usernames (admin/student) and their passwords.
 include 'data/mock_data.php';
 
 $error = "";
 
 // 1. HANDLE LOGIN LOGIC
+// We use 'isset' to check if the button was actually clicked. 
+// This prevents the login logic from running when the page just loads for the first time.
 if (isset($_POST['login_btn'])) {
+    
+    // Capture the data entered by the user in the form fields
     $user = $_POST['username'];
     $pass = $_POST['password'];
 
     // Check if username exists in our "fake database" and password matches
+    // isset($users[$user]) checks if the username is in our array.
+    // $users[$user] == $pass checks if the password matches the key value.
     if (isset($users[$user]) && $users[$user] == $pass) {
         
         // Success! Save user to session
+        // TIP: This is the most important line. Storing the name in $_SESSION 
+        // tells the server to "remember" this user as they browse other pages (like the cart).
         $_SESSION['user'] = $user;
         
         // --- UPDATED LOGIC STARTS HERE ---
         
         // If the user is 'admin', send them strictly to the Dashboard
+        // TIP: This is called "Role-Based Redirection". We check who the user is
+        // and send them to their specific area (Admin Panel vs Student Menu).
         if ($user === 'admin') {
             echo "<script>window.location.href='admin/dashboard.php';</script>";
         } 
@@ -26,10 +38,11 @@ if (isset($_POST['login_btn'])) {
             echo "<script>window.location.href='index.php';</script>";
         }
         
-        exit();
+        exit(); // Stop the script here so no more code runs after redirect
         // --- UPDATED LOGIC ENDS HERE ---
 
     } else {
+        // If authentication fails, we store an error message to display it in HTML below.
         $error = "Invalid Username or Password!";
     }
 }

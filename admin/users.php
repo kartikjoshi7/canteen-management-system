@@ -1,8 +1,9 @@
 <?php
 session_start();
+
 include '../data/mock_data.php'; // Get the user data
 
-// Security Check
+// 2. SECURITY CHECK
 if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
     header("Location: ../login.php");
     exit();
@@ -13,7 +14,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Manage Users | GTU Canteen</title>
+    <title>Manage Users | SVIT Canteen</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -25,7 +26,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
 
 <header>
     <nav>
-        <h1>GTU Admin Panel</h1>
+        <h1>SVIT Admin Panel</h1>
         <ul>
             <li><a href="dashboard.php">Dashboard</a></li>
             <li><a href="../logout.php">Logout</a></li>
@@ -50,17 +51,29 @@ if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
             </tr>
         </thead>
         <tbody>
-            <?php foreach($users as $username => $password): ?>
+            <?php 
+            // 3. DISPLAY LOOP
+            // We loop through the hardcoded $users array (Key=Username, Value=Password).
+            // We ignore the password here for security (never show passwords!).
+            foreach($users as $username => $password): 
+            ?>
             <tr>
                 <td><strong><?php echo $username; ?></strong></td>
                 <td>
-                    <?php if($username == 'admin'): ?>
+                    <?php 
+                    // 4. ROLE DISPLAY LOGIC
+                    // We check the username to decide what "Badge" to show.
+                    // This helps the Admin quickly see who has high-level access.
+                    if($username == 'admin'): 
+                    ?>
                         <span style="background: #333; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.8rem;">ADMIN</span>
                     <?php else: ?>
                         <span style="background: #007bff; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.8rem;">STUDENT</span>
                     <?php endif; ?>
                 </td>
+                
                 <td style="color: green;">Active</td>
+                
                 <td>
                     <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #dc3545;">Remove</button>
                 </td>

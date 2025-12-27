@@ -1,11 +1,16 @@
 <?php
-// Start the session
+// 1. SESSION MANAGEMENT
+// Que: "Why do we check session_status()?"
+// Ans: "If a session is already running (e.g., from a previous page redirect), 
+// starting it again causes an error. This check ensures we only start it if one doesn't exist."
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// INCLUDE THE FUNCTIONS FILE
-// __DIR__ ensures it looks in the 'includes' folder, no matter which page loads this header.
+// 2. INCLUDE HELPER FUNCTIONS
+// TIP: We include functions.php here so that EVERY page on the website 
+// automatically gets access to the 'get_cart_count()' function without writing extra code.
+// '__DIR__' makes sure the path is always correct, even if we include this header from a subfolder.
 include __DIR__ . '/functions.php';
 ?>
 <!DOCTYPE html>
@@ -20,7 +25,7 @@ include __DIR__ . '/functions.php';
 
 <header>
     <nav>
-        <h1>GTU Canteen</h1>
+        <h1>SVIT Canteen</h1>
         <ul>
             <li><a href="index.php">Home</a></li>
             <li><a href="menu.php">Menu</a></li>

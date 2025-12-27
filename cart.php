@@ -3,41 +3,52 @@ include 'includes/header.php';
 include 'data/mock_data.php';
 
 // --- LOGIC 1: HANDLE ADD / INCREASE / DECREASE ---
-// We use $_REQUEST so it works for both links (GET) and forms (POST)
+// TIP: We use $_REQUEST instead of $_GET or $_POST because it captures both.
+// This allows us to use links (GET) and forms (POST) to trigger actions.
 if (isset($_REQUEST['action']) && isset($_REQUEST['id'])) {
+    
     $action = $_REQUEST['action'];
     $id = $_REQUEST['id'];
 
     // CASE A: Add or Increase Item (Same logic)
+    // Logic: We simply push the Item ID into the $_SESSION['cart'] array.
+    // If the array was [1, 2], and we add 1, it becomes [1, 2, 1].
     if ($action == 'add' || $action == 'increase') {
         $_SESSION['cart'][] = $id;
     }
 
     // CASE B: Decrease Item
     if ($action == 'decrease') {
-        // Find one instance of this ID and remove it
+        // Logic: We need to find just ONE instance of this ID and remove it.
+        // array_search() finds the first index key (e.g., index 0) where this ID exists.
         $key = array_search($id, $_SESSION['cart']);
+        
         if ($key !== false) {
+            // unset() deletes that specific array slot.
             unset($_SESSION['cart'][$key]);
-            // Re-index array so there are no empty gaps
+            
+            // CRITICAL STEP: When we delete an item, it leaves a 'gap' in the array keys (0, 2, 3...).
+            // array_values() re-indexes the array cleanly (0, 1, 2...).
             $_SESSION['cart'] = array_values($_SESSION['cart']);
         }
     }
 
     // --- SMART REDIRECT LOGIC ---
-    // Check if the user clicked this from the "Menu" page
+    // If the user clicked '+' on the Menu page, we want to stay on the Menu page.
+    // If they clicked '+' on the Cart page, we want to refresh the Cart page.
     if (isset($_REQUEST['from']) && $_REQUEST['from'] == 'menu') {
-        // Send them back to the Menu (and jump to the specific item)
+        // Jump directly to the item so the user doesn't have to scroll down again.
         echo "<script>window.location.href='menu.php#item-$id';</script>";
     } else {
-        // Otherwise, refresh the Cart page
+        // Otherwise, refresh the Cart page to show updated totals.
         echo "<script>window.location.href='cart.php';</script>";
     }
-    exit();
+    exit(); // Always exit after a header redirect
 }
 
 // --- LOGIC 2: HANDLE CLEAR CART ---
 if (isset($_GET['action']) && $_GET['action'] == 'clear') {
+    // Simply destroy the specific session variable for the cart.
     unset($_SESSION['cart']); 
     echo "<script>window.location.href='cart.php';</script>";
     exit();
@@ -67,13 +78,20 @@ if (isset($_GET['action']) && $_GET['action'] == 'clear') {
             <?php 
             $total_price = 0;
             
-            // 1. Count how many times each ID appears (e.g., ID 1 => 2 times)
+            // 1. COUNT DUPLICATES
+            // The session array looks like [1, 1, 2, 1].
+            // array_count_values() converts it to: [1 => 3, 2 => 1].
+            // This gives us the Item ID and its Quantity automatically.
             $cart_counts = array_count_values($_SESSION['cart']);
 
-            // 2. Loop through the UNIQUE items
+            // 2. DISPLAY TABLE ROWS
             foreach ($cart_counts as $id => $quantity) {
+                
+                // Ensure the item still exists in our mock database
                 if (isset($menu_items[$id])) {
                     $item = $menu_items[$id];
+                    
+                    // Math: Price x Quantity
                     $subtotal = $item['price'] * $quantity;
                     $total_price += $subtotal;
             ?>
