@@ -1,81 +1,102 @@
 <?php
-include 'includes/header.php';
-// We include mock_data.php because it acts as our "Database". 
-// It contains the list of valid usernames (admin/student) and their passwords.
-include 'data/mock_data.php';
+session_start();
+include 'includes/db_connect.php';
+
+// --- AUTO-REDIRECT IF ALREADY LOGGED IN ---
+// If user is already logged in (Session), skip login page
+if (isset($_SESSION['user'])) {
+    $redirect = ($_SESSION['role'] == 'admin') ? "admin/dashboard.php" : "index.php";
+    header("Location: $redirect");
+    exit();
+}
 
 $error = "";
 
-// 1. HANDLE LOGIN LOGIC
-// We use 'isset' to check if the button was actually clicked. 
-// This prevents the login logic from running when the page just loads for the first time.
-if (isset($_POST['login_btn'])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
-    // Capture the data entered by the user in the form fields
-    $user = $_POST['username'];
-    $pass = $_POST['password'];
+    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $password = $_POST['password'];
 
-    // Check if username exists in our "fake database" and password matches
-    // isset($users[$user]) checks if the username is in our array.
-    // $users[$user] == $pass checks if the password matches the key value.
-    if (isset($users[$user]) && $users[$user] == $pass) {
+    $sql = "SELECT * FROM users WHERE username = '$username'";
+    $result = mysqli_query($conn, $sql);
+
+    if (mysqli_num_rows($result) == 1) {
+        $row = mysqli_fetch_assoc($result);
         
-        // Success! Save user to session
-        // TIP: This is the most important line. Storing the name in $_SESSION 
-        // tells the server to "remember" this user as they browse other pages (like the cart).
-        $_SESSION['user'] = $user;
-        
-        // --- UPDATED LOGIC STARTS HERE ---
-        
-        // If the user is 'admin', send them strictly to the Dashboard
-        // TIP: This is called "Role-Based Redirection". We check who the user is
-        // and send them to their specific area (Admin Panel vs Student Menu).
-        if ($user === 'admin') {
-            echo "<script>window.location.href='admin/dashboard.php';</script>";
-        } 
-        // If it is a normal student, send them to the Home Page
-        else {
-            echo "<script>window.location.href='index.php';</script>";
+        if (password_verify($password, $row['password']) || $password == $row['password']) {
+            
+            // Fix Plain Text Password (Self-Healing)
+            if ($password == $row['password']) {
+                $new_hash = password_hash($password, PASSWORD_DEFAULT);
+                $uid = $row['id'];
+                mysqli_query($conn, "UPDATE users SET password = '$new_hash' WHERE id = '$uid'");
+            }
+
+            // 1. SET SESSION (Standard Login)
+            $_SESSION['user'] = $row['username'];
+            $_SESSION['user_id'] = $row['id'];
+            $_SESSION['role'] = $row['role'];
+
+            // 2. SET COOKIE (Remember Me Feature)
+            if (isset($_POST['remember'])) {
+                // Cookie lasts for 30 Days (86400 seconds * 30)
+                // We store the ID and a Hash of the Username for security
+                setcookie('canteen_user', $row['username'], time() + (86400 * 30), "/");
+                setcookie('canteen_role', $row['role'], time() + (86400 * 30), "/");
+            }
+
+            // 3. REDIRECT
+            $redirect_url = ($row['role'] == 'admin') ? "admin/dashboard.php" : "index.php";
+            echo "<script>window.location.href = '$redirect_url';</script>";
+            exit();
+
+        } else {
+            $error = "Incorrect Password!";
         }
-        
-        exit(); // Stop the script here so no more code runs after redirect
-        // --- UPDATED LOGIC ENDS HERE ---
-
     } else {
-        // If authentication fails, we store an error message to display it in HTML below.
-        $error = "Invalid Username or Password!";
+        $error = "User not found!";
     }
 }
 ?>
 
-<div class="login-container" style="max-width: 400px; margin: 50px auto; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-    
-    <h2 style="text-align: center; margin-bottom: 20px;">Login</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login | SVIT Canteen</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
 
+<?php include 'includes/header.php'; ?>
+
+<div class="login-container">
+    <h2>Login</h2>
+    
     <?php if($error): ?>
-        <p style="color: red; text-align: center; background: #ffe6e6; padding: 10px; border-radius: 3px;"><?php echo $error; ?></p>
+        <p style="color: red; background: #ffe6e6; padding: 10px; border-radius: 5px;"><?php echo $error; ?></p>
     <?php endif; ?>
 
-    <form method="POST" action="">
-        <div style="margin-bottom: 15px;">
-            <label>Username</label>
-            <input type="text" name="username" class="form-control" style="width: 100%; padding: 10px; margin-top: 5px;" required>
-        </div>
-        
-        <div style="margin-bottom: 20px;">
-            <label>Password</label>
-            <input type="password" name="password" class="form-control" style="width: 100%; padding: 10px; margin-top: 5px;" required>
+    <form method="POST">
+        <label>Username</label>
+        <input type="text" name="username" required placeholder="Enter username">
+
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="Enter password">
+
+        <div style="text-align: left; margin-bottom: 20px; display: flex; align-items: center;">
+            <input type="checkbox" name="remember" id="remember" style="width: auto; margin: 0 10px 0 0;">
+            <label for="remember" style="margin: 0; cursor: pointer; font-size: 0.95rem;">Remember me</label>
         </div>
 
-        <button type="submit" name="login_btn" class="btn" style="width: 100%;">Login</button>
+        <button type="submit" class="btn" style="width: 100%;">Login</button>
     </form>
-    
-    <p style="margin-top: 15px; font-size: 0.9rem; color: #666; text-align: center;">
-        <strong>Hint:</strong><br> 
-        Student: <b>student</b> / <b>1234</b><br>
-        Admin: <b>admin</b> / <b>admin</b>
-    </p>
 
+    <p style="margin-top: 20px;">
+        Don't have an account? <a href="signup.php" style="color: var(--primary-color); font-weight: bold;">Sign Up Now</a>
+    </p>
 </div>
 
 <?php include 'includes/footer.php'; ?>
+
+</body>
+</html>

@@ -1,34 +1,18 @@
 <?php
 session_start();
+include '../includes/db_connect.php'; // Connect to SQL
 
 // 1. SECURITY CHECK
-// Que: "Why is this check on every admin page?"
-// Ans: "Security is layered. Even if someone guesses the URL 'admin/orders.php', 
-// this code checks if they are logged in as 'admin'. If not, it kicks them out."
-if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
+// We strictly check if the user is logged in AND is an admin.
+if (!isset($_SESSION['user']) || $_SESSION['role'] != 'admin') {
     header("Location: ../login.php");
     exit();
 }
 
-// 2. READ REAL ORDERS FROM JSON
-$file_path = '../data/orders.json';
-$all_orders = [];
-
-// Check if database exists
-if (file_exists($file_path)) {
-    // Read the raw JSON string
-    $json_data = file_get_contents($file_path);
-    // Decode into a PHP Array to loop through it
-    $all_orders = json_decode($json_data, true);
-    
-    // UX IMPROVEMENT: Show newest orders first
-    // Que: "Why array_reverse?"
-    // Ans: "By default, new orders are added to the bottom of the JSON file. 
-    // I reverse the array so the Admin sees the latest orders at the top of the table."
-    if (!empty($all_orders)) {
-        $all_orders = array_reverse($all_orders);
-    }
-}
+// 2. FETCH ALL ORDERS FROM DATABASE
+// We order by 'created_at DESC' so the latest orders appear at the top.
+$sql = "SELECT * FROM orders ORDER BY created_at DESC";
+$result = mysqli_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>
@@ -45,7 +29,6 @@ if (file_exists($file_path)) {
         tr:nth-child(even) { background-color: #f9f9f9; }
         
         /* Status Badges */
-        /* These classes correspond to the status codes below */
         .badge { padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
         .status-pending { background: #ffeeba; color: #856404; }   /* Yellow */
         .status-cooking { background: #b8daff; color: #004085; }   /* Blue */
@@ -76,6 +59,7 @@ if (file_exists($file_path)) {
     <table>
         <thead>
             <tr>
+                <th>Token</th>
                 <th>Order ID</th>
                 <th>Student Name</th>
                 <th>Ordered Items</th>
@@ -85,21 +69,25 @@ if (file_exists($file_path)) {
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($all_orders)): ?>
+            <?php if (mysqli_num_rows($result) == 0): ?>
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 20px;">No orders found.</td>
+                    <td colspan="7" style="text-align: center; padding: 20px;">No orders found in database.</td>
                 </tr>
             <?php else: ?>
                 
-                <?php foreach($all_orders as $order): ?>
+                <?php while($order = mysqli_fetch_assoc($result)): ?>
                 <tr>
-                    <td><strong>#<?php echo $order['id']; ?></strong></td>
-                    <td><?php echo $order['student']; ?></td>
+                    <td><strong style="color: #007bff; font-size: 1.1rem;">#<?php echo $order['token_number']; ?></strong></td>
+                    <td style="color: #666; font-size: 0.8rem;">ID: <?php echo $order['id']; ?></td>
+                    <td><strong><?php echo $order['student_name']; ?></strong></td>
                     <td><?php echo $order['items']; ?></td>
-                    <td>₹<?php echo $order['total']; ?></td>
-                    <td><?php echo isset($order['time']) ? $order['time'] : '-'; ?></td>
+                    <td style="font-weight: bold; color: #28a745;">₹<?php echo $order['total_price']; ?></td>
+                    <td>
+                        <?php echo date("d M Y, h:i A", strtotime($order['created_at'])); ?>
+                    </td>
                     <td>
                         <?php 
+                            // Determine CSS class based on status text
                             $status_lower = strtolower($order['status']);
                             $status_class = "status-" . $status_lower;
                         ?>
@@ -108,7 +96,7 @@ if (file_exists($file_path)) {
                         </span>
                     </td>
                 </tr>
-                <?php endforeach; ?>
+                <?php endwhile; ?>
 
             <?php endif; ?>
         </tbody>
@@ -117,7 +105,7 @@ if (file_exists($file_path)) {
 </div>
 
 <footer style="text-align: center; margin-top: 50px; padding: 20px; background: #333; color: white;">
-    <p>&copy; 2025 Canteen Admin System</p>
+    <p>&copy; 2026 Canteen Admin System</p>
 </footer>
 
 </body>

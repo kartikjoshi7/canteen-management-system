@@ -1,40 +1,31 @@
 <?php
 session_start();
+include '../includes/db_connect.php'; // Connect to SQL
 
-// 1. LOAD DATA FRESH
-// Que: "Why not include mock_data.php here?"
-// Ans: "We need to read the JSON file directly to get the absolute latest state of the menu. 
-// We decode it into an associative array so we can manipulate (delete) items easily."
-$file_path = '../data/food_items.json';
-$menu_items = json_decode(file_get_contents($file_path), true);
-
-// 2. SECURITY CHECK
-// This prevents students or guests from accessing the admin panel by typing the URL directly.
-if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
+// Security Check
+if (!isset($_SESSION['user']) || $_SESSION['role'] != 'admin') {
     header("Location: ../login.php");
     exit();
 }
 
-// 3. HANDLE DELETE ACTION
-// Logic: We check if the URL contains "?action=delete&id=..."
+// HANDLE DELETE ACTION (SQL Version)
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
+    $delete_id = mysqli_real_escape_string($conn, $_GET['id']);
     
-    $delete_id = $_GET['id'];
-    
-    // Que: "How do you delete data without SQL?"
-    // Ans: "I use the PHP 'unset()' function. It removes the specific key-value pair 
-    // from the array effectively deleting the item from memory."
-    unset($menu_items[$delete_id]); 
-
-    // SAVE CHANGES
-    // After deleting from the array, we must OVERWRITE the JSON file with the new array.
-    // JSON_PRETTY_PRINT keeps the text file readable for debugging.
-    file_put_contents($file_path, json_encode($menu_items, JSON_PRETTY_PRINT)); 
-    
-    // Refresh page to show updated list
-    header("Location: food_items.php"); 
-    exit();
+    // SQL Delete Query
+    $sql = "DELETE FROM food_items WHERE id = '$delete_id'";
+    if(mysqli_query($conn, $sql)) {
+        header("Location: food_items.php"); // Refresh
+        exit();
+    } else {
+        echo "Error deleting record: " . mysqli_error($conn);
+    }
 }
+
+// FETCH ITEMS FROM SQL
+$menu_items = [];
+$sql = "SELECT * FROM food_items";
+$result = mysqli_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>
@@ -83,34 +74,37 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
             </tr>
         </thead>
         <tbody>
-            <?php 
-            // 4. DISPLAY LOOP
-            // We loop through the $menu_items array and create a table row (<tr>) for each item.
-            foreach($menu_items as $id => $item): 
-            ?>
+            <?php while($item = mysqli_fetch_assoc($result)): ?>
             <tr>
-                <td><img src="../assets/images/<?php echo $item['image']; ?>" alt="Food"></td>
+                <td>
+                    <?php 
+                        $img_file = "../assets/images/" . $item['image'];
+                        if (!file_exists($img_file) || empty($item['image'])) {
+                            $img_file = "../assets/images/default.jpg"; 
+                        }
+                    ?>
+                    <img src="<?php echo $img_file; ?>" alt="Food">
+                </td>
                 
                 <td><?php echo $item['name']; ?></td>
                 <td style="color: #28a745; font-weight: bold;">₹<?php echo $item['price']; ?></td>
                 <td style="color: #666; font-size: 0.9rem;"><?php echo $item['description']; ?></td>
-                
                 <td>
-                    <a href="edit_food.php?id=<?php echo $id; ?>" class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #007bff; text-decoration: none;">Edit</a>
+                    <a href="edit_food.php?id=<?php echo $item['id']; ?>" class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #007bff; text-decoration: none;">Edit</a>
                     
-                    <a href="food_items.php?action=delete&id=<?php echo $id; ?>" 
+                    <a href="food_items.php?action=delete&id=<?php echo $item['id']; ?>" 
                        class="btn" 
                        style="padding: 5px 10px; font-size: 0.8rem; background: #dc3545; text-decoration: none;"
                        onclick="return confirm('Are you sure you want to remove this item?');">Delete</a>
                 </td>
             </tr>
-            <?php endforeach; ?>
+            <?php endwhile; ?>
         </tbody>
     </table>
 </div>
 
 <footer style="text-align: center; margin-top: 50px; padding: 20px; background: #333; color: white;">
-    <p>&copy; 2025 Canteen Admin System</p>
+    <p>&copy; 2026 Canteen Admin System</p>
 </footer>
 
 </body>

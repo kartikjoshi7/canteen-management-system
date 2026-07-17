@@ -1,59 +1,43 @@
 <?php
 session_start();
+include '../includes/db_connect.php'; // Connect to SQL
 
-// 1. SECURITY CHECK (Gatekeeper)
-// Que: "Why do we have this block at the top?"
-// Ans: "To prevent unauthorized access. If a student tries to guess this URL, 
-// the code checks their session. If they are not 'admin', they get kicked out immediately."
-if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
+// 1. SECURITY CHECK
+if (!isset($_SESSION['user']) || $_SESSION['role'] != 'admin') {
     header("Location: ../login.php");
     exit();
 }
 
-$file_path = '../data/orders.json';
-
-// 2. HANDLE STATUS UPDATE (When Admin clicks "Update" button)
+// 2. HANDLE STATUS UPDATE (SQL Version)
 if (isset($_POST['update_status'])) {
+    $order_id = mysqli_real_escape_string($conn, $_POST['order_id']);
+    $new_status = mysqli_real_escape_string($conn, $_POST['new_status']);
+
+    $update_sql = "UPDATE orders SET status='$new_status' WHERE id='$order_id'";
+    mysqli_query($conn, $update_sql);
     
-    $order_id = $_POST['order_id'];
-    $new_status = $_POST['new_status'];
-
-    if (file_exists($file_path)) {
-        // Read current data
-        $json_data = file_get_contents($file_path);
-        $orders = json_decode($json_data, true);
-
-        // FIND AND UPDATE LOGIC:
-        // Que: "Why did you use the '&' symbol in &$order?"
-        // Ans: "That is 'Pass by Reference'. It allows me to modify the ACTUAL order inside the array. 
-        // Without the '&', PHP would only modify a temporary copy, and the change wouldn't be saved."
-        foreach ($orders as &$order) {
-            if ($order['id'] == $order_id) {
-                $order['status'] = $new_status; // Change the status
-                break; // Stop looking once we found the right order (Efficiency)
-            }
-        }
-        
-        // SAVE CHANGES
-        // Write the updated array back to the JSON file.
-        file_put_contents($file_path, json_encode($orders, JSON_PRETTY_PRINT));
-        
-        // REDIRECT (PRG Pattern)
-        // We refresh the page so the Admin sees the new status immediately.
-        header("Location: dashboard.php");
-        exit();
-    }
+    header("Location: dashboard.php"); // Refresh
+    exit();
 }
 
-// 3. READ ORDERS FOR STATISTICS
+// 3. READ ORDERS FROM SQL
+// We fetch all orders, sorted by newest first (DESC)
 $orders = [];
-if (file_exists($file_path)) {
-    $json_data = file_get_contents($file_path);
-    $orders = json_decode($json_data, true);
-    
-    // Reverse array to show newest orders at the top
-    if (!empty($orders)) {
-        $orders = array_reverse($orders); 
+$sql = "SELECT * FROM orders ORDER BY created_at DESC";
+$result = mysqli_query($conn, $sql);
+
+// 4. CALCULATE STATS (SQL Version)
+$total_orders = mysqli_num_rows($result);
+$revenue = 0;
+$pending_count = 0;
+
+// Loop once to calculate stats
+// We store rows in an array so we can reuse them for the table below
+while ($row = mysqli_fetch_assoc($result)) {
+    $orders[] = $row;
+    $revenue += $row['total_price'];
+    if($row['status'] == 'Pending') {
+        $pending_count++;
     }
 }
 ?>
@@ -62,7 +46,6 @@ if (file_exists($file_path)) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | SVIT Canteen</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
@@ -76,10 +59,8 @@ if (file_exists($file_path)) {
         th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
         th { background: #333; color: white; }
         
-        /* Dropdown & Button Styling */
         select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
         .btn-update { background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        .btn-update:hover { background: #0056b3; }
     </style>
 </head>
 <body>
@@ -101,7 +82,7 @@ if (file_exists($file_path)) {
     <div class="dashboard-grid">
         <div class="sidebar">
             <h3>Menu</h3>
-            <a href="orders.php">📦 All Orders</a>
+            <a href="dashboard.php" style="background: #555; color: white;">📦 All Orders</a>
             <a href="food_items.php">🍔 Manage Food Items</a>
             <a href="users.php">👥 Manage Users</a>
         </div>
@@ -109,34 +90,17 @@ if (file_exists($file_path)) {
         <div class="main-content">
             
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
-                
                 <div class="stat-card">
                     <h3>Total Orders</h3>
-                    <p style="font-size: 2rem; color: #28a745;"><?php echo count($orders); ?></p>
+                    <p style="font-size: 2rem; color: #28a745;"><?php echo $total_orders; ?></p>
                 </div>
-
                 <div class="stat-card">
                     <h3>Pending</h3>
-                    <p style="font-size: 2rem; color: #ff9900;">
-                        <?php 
-                        // Logic: Loop through orders and count only those where status is 'Pending'
-                        $pending_count = 0;
-                        foreach($orders as $o) { if($o['status'] == 'Pending') $pending_count++; }
-                        echo $pending_count;
-                        ?>
-                    </p>
+                    <p style="font-size: 2rem; color: #ff9900;"><?php echo $pending_count; ?></p>
                 </div>
-
                 <div class="stat-card">
                     <h3>Revenue</h3>
-                    <p style="font-size: 2rem; color: #007bff;">
-                        <?php 
-                        // Logic: Loop through all orders and sum up the 'total' price
-                        $revenue = 0;
-                        foreach($orders as $o) { $revenue += $o['total']; }
-                        echo "₹" . $revenue;
-                        ?>
-                    </p>
+                    <p style="font-size: 2rem; color: #007bff;">₹<?php echo $revenue; ?></p>
                 </div>
             </div>
 
@@ -144,31 +108,38 @@ if (file_exists($file_path)) {
             <table>
                 <thead>
                     <tr>
-                        <th>Order ID</th>
+                        <th>Token</th>
+                        <th>Student</th>
                         <th>Items</th>
                         <th>Total</th>
-                        <th>Update Status</th>
+                        <th>Status / Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($orders)): ?>
-                        <tr><td colspan="4" style="text-align: center;">No orders yet.</td></tr>
+                        <tr><td colspan="5" style="text-align: center;">No orders yet.</td></tr>
                     <?php else: ?>
                         
                         <?php foreach ($orders as $order): ?>
                         <tr>
                             <td>
-                                <strong>#<?php echo $order['id']; ?></strong><br>
-                                <small><?php echo $order['student']; ?></small>
+                                <strong style="font-size: 1.2rem; color: #007bff;">#<?php echo $order['token_number']; ?></strong>
+                                <br><small style="color: #999;"><?php echo $order['created_at']; ?></small>
                             </td>
+                            <td><?php echo $order['student_name']; ?></td>
                             <td><?php echo $order['items']; ?></td>
-                            <td>₹<?php echo $order['total']; ?></td>
+                            <td style="font-weight: bold;">₹<?php echo $order['total_price']; ?></td>
                             
                             <td>
                                 <form method="POST" style="display: flex; gap: 5px;">
                                     <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                     
-                                    <select name="new_status">
+                                    <select name="new_status" style="
+                                        border-color: <?php 
+                                            if($order['status']=='Pending') echo 'orange'; 
+                                            elseif($order['status']=='Completed') echo 'green'; 
+                                            else echo '#ccc';
+                                        ?>;">
                                         <option value="Pending" <?php if($order['status']=='Pending') echo 'selected'; ?>>Pending</option>
                                         <option value="Cooking" <?php if($order['status']=='Cooking') echo 'selected'; ?>>Cooking</option>
                                         <option value="Completed" <?php if($order['status']=='Completed') echo 'selected'; ?>>Completed</option>
@@ -188,10 +159,6 @@ if (file_exists($file_path)) {
         </div>
     </div>
 </div>
-
-<footer style="text-align: center; margin-top: 50px; padding: 20px; background: #333; color: white;">
-    <p>&copy; 2025 Canteen Admin System</p>
-</footer>
 
 </body>
 </html>

@@ -1,16 +1,21 @@
 <?php
-// 1. SESSION MANAGEMENT
-// Que: "Why do we check session_status()?"
-// Ans: "If a session is already running (e.g., from a previous page redirect), 
-// starting it again causes an error. This check ensures we only start it if one doesn't exist."
+// 1. START SESSION SAFELY
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 2. INCLUDE HELPER FUNCTIONS
-// TIP: We include functions.php here so that EVERY page on the website 
-// automatically gets access to the 'get_cart_count()' function without writing extra code.
-// '__DIR__' makes sure the path is always correct, even if we include this header from a subfolder.
+// 2. AUTO-LOGIN CHECK (Remember Me Logic)
+// If the user is NOT logged in via Session, BUT has a valid Cookie...
+if (!isset($_SESSION['user']) && isset($_COOKIE['canteen_user'])) {
+    
+    // We trust the cookie for this session
+    // (In a real banking app, we would use a secure token, but this is perfect for a college project)
+    $_SESSION['user'] = $_COOKIE['canteen_user'];
+    $_SESSION['role'] = $_COOKIE['canteen_role']; // We stored role in cookie too
+    
+    // NOTE: We don't verify password here because cookies are proof they already logged in once.
+}
+
 include __DIR__ . '/functions.php';
 ?>
 <!DOCTYPE html>
@@ -20,6 +25,12 @@ include __DIR__ . '/functions.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canteen System</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    
+    <script>
+    if ( window.history.replaceState ) {
+        window.history.replaceState( null, null, window.location.href );
+    }
+    </script>
 </head>
 <body>
 

@@ -1,9 +1,22 @@
 <?php
 include 'includes/header.php';
-// This line connects to our "Database" file.
-// In the future, this is where we would connect to MySQL. 
-// For now, it loads the array of food items from a file.
-include 'data/mock_data.php'; 
+
+// DATABASE CONNECTION
+// We include the connection file to talk to MySQL.
+include 'includes/db_connect.php';
+
+// FETCH FOOD ITEMS FROM DATABASE (SQL)
+$menu_items = [];
+$sql = "SELECT * FROM food_items";
+$result = mysqli_query($conn, $sql);
+
+// Check if query was successful and has data
+if ($result && mysqli_num_rows($result) > 0) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        // We use the ID as the key for easy access later
+        $menu_items[$row['id']] = $row;
+    }
+}
 ?>
 
 <h2>Our Menu</h2>
@@ -12,9 +25,7 @@ include 'data/mock_data.php';
 
 <?php 
 // CLEAN URL TRICK:
-// When an item is added, the URL becomes 'menu.php?added=1'.
-// This Javascript snippet silently removes that '?added=1' part
-// so if the user refreshes the page, it doesn't try to add the item again.
+// Removes '?added=1' from URL to prevent duplicate additions on refresh.
 if(isset($_GET['added'])): 
 ?>
     <script>
@@ -25,31 +36,34 @@ if(isset($_GET['added'])):
 <div class="menu-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
     
     <?php 
-    // TIP: Always check if data exists before looping to prevent errors.
-    if(isset($menu_items) && count($menu_items) > 0){
+    // Check if we have items to display
+    if(count($menu_items) > 0){
         
         // LOOP START:
-        // This foreach loop goes through every single item in our 'database'
-        // and generates the HTML card for it automatically.
         foreach($menu_items as $id => $item): 
             
             // CRITICAL LOGIC: Smart Cart Button
             // We check how many of THIS specific item are already in the session cart.
-            // If the user has 2 burgers, $qty will be 2.
             $qty = get_item_count($id);
     ?>
         
         <div id="item-<?php echo $id; ?>" class="food-card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fff;">
             
-            <img src="assets/images/<?php echo $item['image']; ?>" alt="<?php echo $item['name']; ?>" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background-color: #eee;">
+            <?php 
+                $img_path = "assets/images/" . $item['image'];
+                if (!file_exists($img_path) || empty($item['image'])) {
+                    $img_path = "assets/images/default.jpg"; 
+                }
+            ?>
+            <img src="<?php echo $img_path; ?>" alt="<?php echo $item['name']; ?>" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background-color: #eee;">
+            
             <h3 style="margin: 10px 0;"><?php echo $item['name']; ?></h3>
             <p style="color: #666; font-size: 0.9rem; min-height: 40px;"><?php echo $item['description']; ?></p>
             <h4 style="color: #28a745; margin: 10px 0;">₹<?php echo $item['price']; ?></h4>
             
             <?php 
             // LOGIC FOR BUTTON SWITCHING:
-            // Case 1: If the user has NOT bought this item yet ($qty == 0),
-            // show the simple "Add to Cart" button.
+            // Case 1: Item NOT in cart -> Show "Add to Cart"
             if ($qty == 0): 
             ?>
                 
@@ -58,8 +72,7 @@ if(isset($_GET['added'])):
                 </a>
 
             <?php 
-            // Case 2: If the user ALREADY has this item in cart,
-            // show the "+ / -" controls so they can edit quantity directly.
+            // Case 2: Item IS in cart -> Show "+ / -" buttons
             else: 
             ?>
 
@@ -88,7 +101,7 @@ if(isset($_GET['added'])):
 
     } else {
         // Fallback message if the database is empty
-        echo "<p>No food items found. Please check data/mock_data.php</p>";
+        echo "<p style='grid-column: 1/-1; text-align: center; color: #666;'>No food items found in the database.</p>";
     }
     ?>
 

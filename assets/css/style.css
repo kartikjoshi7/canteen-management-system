@@ -1,27 +1,43 @@
-/* IMPORT GOOGLE FONT (Poppins - Clean & Modern) */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+/* =========================================
+   1. FONTS & VARIABLES
+   ========================================= */
+/* Import Google Font (Poppins) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* --- CSS VARIABLES (Easy to change colors) --- */
 :root {
-    --primary-color: #ff6600;      /* Vibrant Orange */
+    /* Color Palette - Vibrant & Professional */
+    --primary-color: #ff6600;      /* SVIT Orange */
     --primary-hover: #e65c00;      /* Darker Orange */
-    --secondary-color: #2d3436;    /* Dark Grey (Header) */
-    --bg-color: #f8f9fa;           /* Light Grey Background */
-    --card-bg: #ffffff;            /* White */
-    --text-color: #333333;
-    --light-text: #666666;
+    --secondary-color: #2d3436;    /* Dark Slate (Header/Footer) */
+    --bg-color: #f4f6f9;           /* Very Light Blue-Grey Background */
+    --card-bg: #ffffff;            /* Pure White */
+    --text-color: #333333;         /* Dark Grey Text */
+    --light-text: #666666;         /* Light Grey Text */
+    
+    /* Functional Colors */
     --success-color: #28a745;
     --danger-color: #dc3545;
-    --shadow-sm: 0 2px 5px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 15px rgba(0,0,0,0.1);
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 8px 20px rgba(0,0,0,0.1);
+    --shadow-lg: 0 15px 30px rgba(0,0,0,0.15);
 }
 
-/* --- RESET & BASICS --- */
+/* =========================================
+   2. GLOBAL RESET
+   ========================================= */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Poppins', sans-serif; /* Applied Modern Font */
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
@@ -30,16 +46,27 @@ body {
     line-height: 1.6;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    min-height: 100vh; /* Ensures footer stays at bottom */
 }
 
-/* --- NAVIGATION BAR --- */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+/* =========================================
+   3. NAVIGATION BAR
+   ========================================= */
 header {
     background: var(--secondary-color);
     color: #fff;
     padding: 1rem 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    position: sticky; /* Sticks to top when scrolling */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: sticky;
     top: 0;
     z-index: 1000;
 }
@@ -49,175 +76,72 @@ nav {
     justify-content: space-between;
     align-items: center;
     width: 90%;
-    max-width: 1200px; /* Prevents it from getting too wide on huge screens */
+    max-width: 1200px;
     margin: auto;
 }
 
 nav h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.6rem;
+    font-weight: 700;
     letter-spacing: 1px;
+    background: linear-gradient(45deg, #ff6600, #ff9e00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; /* Makes text look metallic/gradient */
 }
 
 nav ul {
-    list-style: none;
     display: flex;
-    gap: 25px; /* Modern spacing instead of margin-left */
+    gap: 25px;
 }
 
 nav ul li a {
-    color: #fff;
-    text-decoration: none;
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 500;
     font-size: 0.95rem;
-    transition: color 0.3s ease;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
 }
 
-nav ul li a:hover {
-    color: var(--primary-color);
+nav ul li a:hover, 
+nav ul li a.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
 }
 
-/* --- CONTAINER --- */
+/* =========================================
+   4. LAYOUT & CONTAINERS
+   ========================================= */
 .container {
     width: 90%;
     max-width: 1200px;
-    margin: 2rem auto;
-    background: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 12px; /* Smoother corners */
-    box-shadow: var(--shadow-md); /* Soft shadow */
+    margin: 3rem auto;
+    background: transparent; /* Clean look */
     min-height: 60vh;
-    animation: fadeIn 0.5s ease-in-out; /* Fade in animation */
+    animation: fadeIn 0.6s ease-out;
 }
 
-/* --- BUTTONS (Modern & Tactile) --- */
-.btn {
-    display: inline-block;
-    background: var(--primary-color);
-    color: #fff;
-    padding: 12px 24px;
-    text-decoration: none;
-    border-radius: 30px; /* Pill shape */
-    border: none;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(255, 102, 0, 0.2);
-}
-
-.btn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-2px); /* Slight lift effect */
-    box-shadow: 0 6px 12px rgba(255, 102, 0, 0.3);
-}
-
-/* --- FOOD MENU CARDS (Grid Layout) --- */
-.menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 30px;
-    padding: 10px;
-}
-
-.food-card {
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid #eee;
-}
-
-.food-card:hover {
-    transform: translateY(-5px); /* Lift up card on hover */
-    box-shadow: var(--shadow-md);
-    border-color: transparent;
-}
-
-.food-card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.food-card:hover img {
-    transform: scale(1.05); /* Slight zoom on image */
-}
-
-.food-card h3 {
-    margin: 15px 0 5px;
-    font-size: 1.2rem;
-    color: var(--text-color);
-}
-
-.food-card p {
-    color: var(--light-text);
-    font-size: 0.9rem;
-    padding: 0 15px;
-}
-
-.food-card h4 {
-    font-size: 1.3rem;
-    margin: 10px 0;
-    color: var(--primary-color);
-}
-
-.food-card .btn {
-    width: 90%;
-    margin-bottom: 20px;
-    border-radius: 8px; /* Slightly squarer buttons for cards */
-}
-
-/* --- TABLES (Cart & Admin) --- */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden; /* Clips corners for header */
-    box-shadow: var(--shadow-sm);
-}
-
-th {
-    background: var(--secondary-color);
-    color: #fff;
-    padding: 15px;
-    text-align: left;
-    font-weight: 500;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-}
-
-td {
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    color: var(--text-color);
-}
-
-tr:last-child td {
-    border-bottom: none;
-}
-
-tr:hover {
-    background-color: #f9f9f9; /* Row highlight on hover */
-}
-
-/* --- FORMS (Login & Inputs) --- */
-.login-container {
-    max-width: 400px;
-    margin: 50px auto;
+/* Centered White Card (For Login/Signup/Cart) */
+.login-container, .cart-container {
+    background: var(--card-bg);
     padding: 40px;
-    background: #fff;
-    border-radius: 12px;
+    border-radius: 15px;
     box-shadow: var(--shadow-md);
-    text-align: center;
+    margin: 50px auto;
+    max-width: 500px; /* Limits width for better readability */
 }
 
+.cart-container {
+    max-width: 900px; /* Wider for cart tables */
+}
+
+/* =========================================
+   5. BUTTONS & INPUTS
+   ========================================= */
+/* Modern Inputs */
 input[type="text"], 
 input[type="password"], 
+input[type="email"], 
 input[type="number"],
 textarea,
 select,
@@ -225,55 +149,251 @@ input[type="file"] {
     width: 100%;
     padding: 12px 15px;
     margin: 8px 0 20px 0;
-    display: inline-block;
-    border: 1px solid #ddd;
+    border: 2px solid #eee;
     border-radius: 8px;
     background: #fdfdfd;
-    transition: border-color 0.3s ease;
-    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
 }
 
 input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--primary-color);
     background: #fff;
-    box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.1);
 }
 
-/* --- DASHBOARD STAT CARDS --- */
+/* Modern Buttons */
+.btn {
+    display: inline-block;
+    background: var(--primary-color);
+    color: #fff !important; /* Force white text */
+    padding: 12px 28px;
+    border-radius: 50px; /* Pill shape */
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(255, 102, 0, 0.25);
+}
+
+.btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-3px); /* Lift effect */
+    box-shadow: 0 8px 20px rgba(255, 102, 0, 0.35);
+}
+
+.btn:active {
+    transform: translateY(-1px);
+}
+
+/* =========================================
+   6. FOOD MENU GRID
+   ========================================= */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 10px 0;
+}
+
+.food-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.food-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+}
+
+.food-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.food-card:hover img {
+    transform: scale(1.05);
+}
+
+.food-card h3 {
+    padding: 15px 15px 5px 15px;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.food-card p {
+    padding: 0 15px;
+    color: var(--light-text);
+    font-size: 0.9rem;
+    flex-grow: 1; /* Pushes button to bottom */
+}
+
+.food-card h4 {
+    padding: 10px 15px;
+    font-size: 1.4rem;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.food-card .btn {
+    width: 90%;
+    margin: 0 auto 20px auto;
+    border-radius: 10px; /* Less rounded for cards */
+}
+
+/* =========================================
+   7. TABLES (Cart, Orders, Admin)
+   ========================================= */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+th {
+    background: var(--secondary-color);
+    color: #fff;
+    padding: 18px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+td {
+    padding: 15px 18px;
+    border-bottom: 1px solid #f0f0f0;
+    color: var(--text-color);
+    vertical-align: middle;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background-color: #fcfcfc;
+}
+
+/* Status Badges in Tables */
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.status-pending { background: #ffeeba; color: #856404; }
+.status-cooking { background: #d1ecf1; color: #0c5460; }
+.status-completed { background: #d4edda; color: #155724; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
+
+/* =========================================
+   8. ADMIN DASHBOARD
+   ========================================= */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 30px;
+}
+
+.sidebar {
+    background: var(--secondary-color);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    height: fit-content;
+    box-shadow: var(--shadow-md);
+}
+
+.sidebar a {
+    display: block;
+    color: rgba(255,255,255,0.7);
+    padding: 12px 15px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    transform: translateX(5px);
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
 .stat-card {
     background: #fff;
     padding: 25px;
-    border-radius: 10px;
+    border-radius: 15px;
     box-shadow: var(--shadow-sm);
     text-align: center;
-    border-bottom: 4px solid var(--primary-color);
-    transition: transform 0.2s;
+    border-bottom: 5px solid var(--primary-color);
+    transition: transform 0.3s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
-/* --- FOOTER --- */
+.stat-card h3 {
+    font-size: 0.9rem;
+    color: var(--light-text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-card p {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    margin: 10px 0 0 0;
+}
+
+/* =========================================
+   9. FOOTER & UTILS
+   ========================================= */
 footer {
     background: var(--secondary-color);
-    color: #aaa;
+    color: rgba(255,255,255,0.6);
     text-align: center;
-    padding: 2rem 1rem;
-    margin-top: auto; /* Pushes footer to bottom */
-    font-size: 0.9rem;
+    padding: 2rem 0;
+    margin-top: auto;
 }
 
-/* --- ANIMATIONS --- */
+/* Animation */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- RESPONSIVE DESIGN --- */
+/* Responsive */
 @media (max-width: 768px) {
-    nav { flex-direction: column; gap: 15px; }
-    .container { padding: 1.5rem; width: 95%; }
-    .dashboard-grid { grid-template-columns: 1fr !important; }
+    nav { flex-direction: column; gap: 15px; padding: 10px 0; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .sidebar { margin-bottom: 20px; }
 }

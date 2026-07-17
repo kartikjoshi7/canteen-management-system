@@ -1,13 +1,36 @@
 <?php
 session_start();
+include '../includes/db_connect.php'; // Connect to SQL
 
-include '../data/mock_data.php'; // Get the user data
-
-// 2. SECURITY CHECK
-if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
+// 1. SECURITY CHECK
+if (!isset($_SESSION['user']) || $_SESSION['role'] != 'admin') {
     header("Location: ../login.php");
     exit();
 }
+
+// 2. HANDLE DELETE USER
+// This allows the admin to remove a student account permanently.
+if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
+    $delete_id = mysqli_real_escape_string($conn, $_GET['id']);
+    
+    // SAFETY CHECK: Prevent Admin from deleting themselves!
+    $check_sql = "SELECT role FROM users WHERE id = '$delete_id'";
+    $check_result = mysqli_query($conn, $check_sql);
+    $user_to_delete = mysqli_fetch_assoc($check_result);
+
+    // Only delete if the user is NOT an admin
+    if ($user_to_delete && $user_to_delete['role'] != 'admin') {
+        $sql = "DELETE FROM users WHERE id = '$delete_id'";
+        mysqli_query($conn, $sql);
+    }
+    
+    header("Location: users.php");
+    exit();
+}
+
+// 3. FETCH USERS FROM DATABASE
+$sql = "SELECT * FROM users";
+$result = mysqli_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>
@@ -36,35 +59,38 @@ if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>👥 Registered Users</h2>
+    <h2>👥 Registered Users</h2>
+    <div>
+        <a href="add_vendor.php" class="btn" style="background: #28a745; margin-right: 10px;">+ Add Vendor</a>
         <a href="dashboard.php" class="btn" style="background: #666;">&larr; Back</a>
     </div>
+</div>
     <hr style="margin: 10px 0 30px 0;">
 
     <table>
         <thead>
             <tr>
                 <th>Username</th>
+                <th>Email</th>
+                <th>Phone</th>
                 <th>Role</th>
-                <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
             <?php 
-            // 3. DISPLAY LOOP
-            // We loop through the hardcoded $users array (Key=Username, Value=Password).
-            // We ignore the password here for security (never show passwords!).
-            foreach($users as $username => $password): 
+            // LOOP THROUGH DATABASE RESULTS
+            while($row = mysqli_fetch_assoc($result)): 
             ?>
             <tr>
-                <td><strong><?php echo $username; ?></strong></td>
+                <td><strong><?php echo $row['username']; ?></strong></td>
+                <td><?php echo $row['email']; ?></td>
+                <td><?php echo $row['phone']; ?></td>
+                
                 <td>
                     <?php 
-                    // 4. ROLE DISPLAY LOGIC
-                    // We check the username to decide what "Badge" to show.
-                    // This helps the Admin quickly see who has high-level access.
-                    if($username == 'admin'): 
+                    // ROLE BADGE LOGIC
+                    if($row['role'] == 'admin'): 
                     ?>
                         <span style="background: #333; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.8rem;">ADMIN</span>
                     <?php else: ?>
@@ -72,19 +98,26 @@ if (!isset($_SESSION['user']) || $_SESSION['user'] != 'admin') {
                     <?php endif; ?>
                 </td>
                 
-                <td style="color: green;">Active</td>
-                
                 <td>
-                    <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #dc3545;">Remove</button>
+                    <?php if($row['role'] != 'admin'): ?>
+                        <a href="users.php?action=delete&id=<?php echo $row['id']; ?>" 
+                           class="btn" 
+                           style="padding: 5px 10px; font-size: 0.8rem; background: #dc3545; text-decoration: none;"
+                           onclick="return confirm('Are you sure you want to delete this user? This cannot be undone.');">
+                           Remove
+                        </a>
+                    <?php else: ?>
+                        <span style="color: #999; font-size: 0.8rem;">(Protected)</span>
+                    <?php endif; ?>
                 </td>
             </tr>
-            <?php endforeach; ?>
+            <?php endwhile; ?>
         </tbody>
     </table>
 </div>
 
 <footer style="text-align: center; margin-top: 50px; padding: 20px; background: #333; color: white;">
-    <p>&copy; 2025 Canteen Admin System</p>
+    <p>&copy; 2026 Canteen Admin System</p>
 </footer>
 
 </body>

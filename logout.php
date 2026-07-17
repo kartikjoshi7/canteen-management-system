@@ -1,23 +1,20 @@
 <?php
-// 1. RESUME SESSION
-// Que: "Why start the session if you are logging out?"
-// ANSWER: You cannot destroy a session unless you are connected to it first.
-// We must "find" the active session to have permission to delete it.
 session_start();
 
-// 2. CLEAR VARIABLES
-// This removes specific data (like 'user', 'cart') from the memory.
-// It is like emptying the papers out of a folder.
+// 1. CLEAR SESSION
 session_unset();
+session_destroy();
 
-// 3. DESTROY SESSION STORAGE
-// This completely deletes the Session File on the server side.
-// After this line, the user's login token is invalid.
-session_destroy(); 
+// 2. CLEAR COOKIES (Critical for "Remember Me")
+// We set the expiration time to the past (time() - 3600), which forces the browser to delete it.
+if (isset($_COOKIE['canteen_user'])) {
+    setcookie('canteen_user', '', time() - 3600, "/");
+}
+if (isset($_COOKIE['canteen_role'])) {
+    setcookie('canteen_role', '', time() - 3600, "/");
+}
 
-// 4. REDIRECT
-// Send the user back to the home/login page.
-// Using exit() is important to ensure no other code runs after the redirect.
+// 3. REDIRECT TO HOME
 header("Location: index.php");
 exit();
 ?>

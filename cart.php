@@ -1,54 +1,56 @@
 <?php
 include 'includes/header.php';
-include 'data/mock_data.php';
+include 'includes/db_connect.php'; // Connect to SQL to get prices
+
+// 1. FETCH FOOD DETAILS FROM DATABASE
+// We need to know that ID 1 is "Burger" and costs 50.
+// We pull all items from the database and create our own "$menu_items" array.
+$menu_items = [];
+$sql = "SELECT * FROM food_items";
+$result = mysqli_query($conn, $sql);
+
+if ($result) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        // We set the Array Key to be the ID (e.g., $menu_items[1] = ...data...)
+        // This makes the rest of the code work exactly like before!
+        $menu_items[$row['id']] = $row;
+    }
+}
 
 // --- LOGIC 1: HANDLE ADD / INCREASE / DECREASE ---
-// TIP: We use $_REQUEST instead of $_GET or $_POST because it captures both.
-// This allows us to use links (GET) and forms (POST) to trigger actions.
 if (isset($_REQUEST['action']) && isset($_REQUEST['id'])) {
     
     $action = $_REQUEST['action'];
     $id = $_REQUEST['id'];
 
-    // CASE A: Add or Increase Item (Same logic)
-    // Logic: We simply push the Item ID into the $_SESSION['cart'] array.
-    // If the array was [1, 2], and we add 1, it becomes [1, 2, 1].
+    // CASE A: Add or Increase Item
     if ($action == 'add' || $action == 'increase') {
         $_SESSION['cart'][] = $id;
     }
 
     // CASE B: Decrease Item
     if ($action == 'decrease') {
-        // Logic: We need to find just ONE instance of this ID and remove it.
-        // array_search() finds the first index key (e.g., index 0) where this ID exists.
+        // Find one instance of this ID
         $key = array_search($id, $_SESSION['cart']);
         
         if ($key !== false) {
-            // unset() deletes that specific array slot.
             unset($_SESSION['cart'][$key]);
-            
-            // CRITICAL STEP: When we delete an item, it leaves a 'gap' in the array keys (0, 2, 3...).
-            // array_values() re-indexes the array cleanly (0, 1, 2...).
+            // Re-index array so we don't have gaps
             $_SESSION['cart'] = array_values($_SESSION['cart']);
         }
     }
 
-    // --- SMART REDIRECT LOGIC ---
-    // If the user clicked '+' on the Menu page, we want to stay on the Menu page.
-    // If they clicked '+' on the Cart page, we want to refresh the Cart page.
+    // SMART REDIRECT
     if (isset($_REQUEST['from']) && $_REQUEST['from'] == 'menu') {
-        // Jump directly to the item so the user doesn't have to scroll down again.
         echo "<script>window.location.href='menu.php#item-$id';</script>";
     } else {
-        // Otherwise, refresh the Cart page to show updated totals.
         echo "<script>window.location.href='cart.php';</script>";
     }
-    exit(); // Always exit after a header redirect
+    exit();
 }
 
 // --- LOGIC 2: HANDLE CLEAR CART ---
 if (isset($_GET['action']) && $_GET['action'] == 'clear') {
-    // Simply destroy the specific session variable for the cart.
     unset($_SESSION['cart']); 
     echo "<script>window.location.href='cart.php';</script>";
     exit();
@@ -61,9 +63,11 @@ if (isset($_GET['action']) && $_GET['action'] == 'clear') {
 
     <?php if (empty($_SESSION['cart'])): ?>
         
-        <p style="text-align: center; font-size: 1.2rem; color: #666;">Your cart is empty.</p>
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="menu.php" class="btn">Go to Menu</a>
+        <div style="text-align: center; padding: 50px;">
+            <p style="font-size: 1.2rem; color: #666;">Your cart is empty.</p>
+            <div style="margin-top: 20px;">
+                <a href="menu.php" class="btn">Go to Menu</a>
+            </div>
         </div>
 
     <?php else: ?>
@@ -78,16 +82,13 @@ if (isset($_GET['action']) && $_GET['action'] == 'clear') {
             <?php 
             $total_price = 0;
             
-            // 1. COUNT DUPLICATES
-            // The session array looks like [1, 1, 2, 1].
-            // array_count_values() converts it to: [1 => 3, 2 => 1].
-            // This gives us the Item ID and its Quantity automatically.
+            // 1. COUNT DUPLICATES (e.g., [1 => 2, 2 => 1])
             $cart_counts = array_count_values($_SESSION['cart']);
 
             // 2. DISPLAY TABLE ROWS
             foreach ($cart_counts as $id => $quantity) {
                 
-                // Ensure the item still exists in our mock database
+                // Ensure the item exists in our Database array
                 if (isset($menu_items[$id])) {
                     $item = $menu_items[$id];
                     
